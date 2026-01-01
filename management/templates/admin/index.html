@@ -1,0 +1,12 @@
+{% extends "admin/index.html" %}
+{% block content %}
+    <div style="margin-bottom: 20px;">
+        <a href="/admin/current-stock/" class="button btn btn-info">View Current Stock</a>
+    </div>
+    <div id="content-related">
+        {# Only show recent actions #}
+        {% block recentactions %}
+            {{ block.super }}
+        {% endblock %}
+    </div>
+{% endblock %}
