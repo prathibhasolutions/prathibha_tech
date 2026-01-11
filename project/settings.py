@@ -118,4 +118,20 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+STATICFILES_DIRS = [
+    BASE_DIR / 'management' / 'static',
+]
+
+# Jazzmin admin branding
+JAZZMIN_SETTINGS = {
+    "site_title": "Prathibha Technologies Admin",
+    "site_header": "Prathibha Technologies",
+    "site_brand": "Prathibha Technologies",
+    "site_logo": "management/img/logo.png",
+    "login_logo": "management/img/logo.png",
+    "login_logo_dark": "management/img/logo.png",
+    "welcome_sign": "Prathibha Technologies",
+    "copyright": "Prathibha Technologies",
+    "custom_css": "management/css/admin_overrides.css",
+}
 

@@ -1,0 +1,78 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Quotation {{ quotation.sl_no }}</title>
+  <style>
+    @page { size: A4; margin: 20mm; }
+    body { font-family: Arial, sans-serif; color: #222; }
+    .header { text-align: center; margin-bottom: 16px; }
+    .header h1 { margin: 0; font-size: 24px; letter-spacing: 0.5px; }
+    .header .meta { font-size: 13px; color: #555; }
+    .logo { width: 120px; margin: 0 auto 8px auto; }
+    .logo img { max-width: 120px; }
+    .info { width: 100%; margin-bottom: 14px; font-size: 14px; }
+    .info td { padding: 4px 0; }
+    table.lines { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+    table.lines th, table.lines td { border: 1px solid #999; padding: 8px; font-size: 14px; }
+    table.lines th { background: #f2f2f2; text-align: left; }
+    .totals { width: 40%; margin-left: auto; border-collapse: collapse; font-size: 14px; }
+    .totals td { padding: 6px 8px; border: 1px solid #999; }
+    .totals .label { background: #f9f9f9; font-weight: 600; }
+    .footer { margin-top: 18px; font-size: 13px; color: #555; text-align: center; }
+    .actions { margin: 12px 0; text-align: right; }
+    .actions button { padding: 8px 14px; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="actions">
+    <button onclick="window.print()">Print</button>
+  </div>
+
+  <div class="header">
+    <div class="logo">
+      <img src="{% static 'management/img/logo.png' %}" alt="Prathibha Technologies Logo" />
+    </div>
+    <h1>Prathibha Technologies</h1>
+    <div class="meta">Quotation No: {{ quotation.sl_no }} &nbsp;|&nbsp; Date: {{ quotation.date }}</div>
+  </div>
+
+  <table class="info">
+    <tr>
+      <td><strong>Customer:</strong> {{ quotation.customer_name }}</td>
+      <td><strong>Mobile:</strong> {{ quotation.mobile_num }}</td>
+    </tr>
+  </table>
+
+  <table class="lines">
+    <thead>
+      <tr>
+        <th>Particulars</th>
+        <th style="width: 70px;">Qty</th>
+        <th style="width: 120px;">Price</th>
+        <th style="width: 120px;">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{{ quotation.particulars|linebreaksbr }}</td>
+        <td>{{ quotation.quantity }}</td>
+        <td>{{ quotation.price }}</td>
+        <td>{{ quotation.total }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table class="totals">
+    <tr>
+      <td class="label">Total</td>
+      <td>{{ quotation.total }}</td>
+    </tr>
+  </table>
+
+  <div class="footer">
+    Thank you for considering Prathibha Technologies.
+  </div>
+</body>
+</html>
