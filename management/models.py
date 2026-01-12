@@ -43,8 +43,8 @@ class Finance(models.Model):
 		("DEBIT", "Debit"),
 		("CREDIT", "Credit"),
 	]
-	
-	DEBIT_REASON_CHOICES = [
+
+	REASON_CHOICES = [
 		("DAILY_CHARGES", "Daily Charges"),
 		("STOCK_IN_LOCAL", "Stock In Local"),
 		("SERVICE_IN_LOCAL", "Service In Local"),
@@ -55,7 +55,7 @@ class Finance(models.Model):
 	date = models.DateField()
 	transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
 	amount = models.DecimalField(max_digits=12, decimal_places=2)
-	reason = models.CharField(max_length=255)
+	reason = models.CharField(max_length=255, choices=REASON_CHOICES, default="OTHER")
 	description = models.TextField(blank=True, null=True)
 	
 	def __str__(self):

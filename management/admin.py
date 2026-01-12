@@ -23,20 +23,17 @@ class FinanceAdmin(admin.ModelAdmin):
 	list_display = ("sl_no", "date", "transaction_type", "amount", "reason")
 	list_filter = ("transaction_type", "date")
 	search_fields = ("reason", "description")
-	
+
 	def get_form(self, request, obj=None, **kwargs):
 		from django import forms
-		form = super().get_form(request, obj, **kwargs)
-		
-		class DynamicFinanceForm(form):
+		base_form = super().get_form(request, obj, **kwargs)
+
+		class FinanceForm(base_form):
 			def __init__(self, *args, **kwargs):
 				super().__init__(*args, **kwargs)
-				if self.instance and self.instance.transaction_type == "DEBIT":
-					self.fields['reason'].widget = forms.Select(choices=Finance.DEBIT_REASON_CHOICES)
-				else:
-					self.fields['reason'].widget = forms.TextInput()
-		
-		return DynamicFinanceForm
+				self.fields['reason'].widget = forms.Select(choices=Finance.REASON_CHOICES)
+
+		return FinanceForm
 
 
 @admin.register(Invoice)
