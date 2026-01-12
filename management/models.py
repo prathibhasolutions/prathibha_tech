@@ -12,6 +12,7 @@ class Entry(models.Model):
 	date = models.DateField()
 	customer_name = models.CharField(max_length=100)
 	mobile_num = models.CharField(max_length=15)
+	product = models.CharField(max_length=255)
 	product_issue = models.CharField(max_length=255)
 	product_with = models.CharField(max_length=255)
 	address = models.TextField()
@@ -29,6 +30,7 @@ class Stock(models.Model):
 	product = models.CharField(max_length=255)
 	serial_number = models.CharField(max_length=100, blank=True, null=True)
 	quantity = models.PositiveIntegerField(default=1)
+	price = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
 	
 	def __str__(self):
 		return f"Stock {self.sl_no} - {self.product}"
