@@ -1,1 +1,34 @@
 {% extends "admin/index.html" %}
+
+{% load i18n %}
+{% load static %}
+
+{% block content %}
+  <div style="margin-top: 30px; background:#fff; border: 1px solid #ddd; border-radius: 4px; padding: 20px;">
+    <h2 style="margin-top: 0; color: #333;">Customer Due — Unpaid Invoices</h2>
+    {% if unpaid_invoices %}
+      <table style="width:100%; border-collapse: collapse;">
+        <thead>
+          <tr style="background: #f8f8f8; border-bottom: 2px solid #ddd;">
+            <th style="text-align:left; padding:12px; border-bottom: 2px solid #ddd;">Invoice No</th>
+            <th style="text-align:left; padding:12px; border-bottom: 2px solid #ddd;">Customer Name</th>
+            <th style="text-align:right; padding:12px; border-bottom: 2px solid #ddd;">Amount Due</th>
+            <th style="text-align:left; padding:12px; border-bottom: 2px solid #ddd;">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inv in unpaid_invoices %}
+            <tr style="border-bottom: 1px solid #f0f0f0;">
+              <td style="padding:12px;"><a href="/admin/management/invoice/{{ inv.pk }}/change/" style="color: #0066cc; text-decoration: none;">{{ inv.invoice_no }}</a></td>
+              <td style="padding:12px; color:#dc3545; font-weight:600;">{{ inv.customer_name }}</td>
+              <td style="padding:12px; text-align:right; color:#dc3545; font-weight:600;">₹{{ inv.balance|floatformat:2 }}</td>
+              <td style="padding:12px;">{{ inv.date|date:"d M Y" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p style="margin:10px 0; color:#6c757d;">No unpaid invoices. Great job!</p>
+    {% endif %}
+  </div>
+{% endblock %}
