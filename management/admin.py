@@ -4,10 +4,53 @@ from django.urls import path, reverse
 from django.template.response import TemplateResponse
 from django.utils.html import format_html
 from django.db import models
+from decimal import Decimal
 from .models import Entry, Stock, Finance, Invoice, Quotation, InvoiceItem, QuotationItem
 from django.contrib import admin as django_admin
 from django import forms
 from .utils import amount_to_words, generate_phonepe_qr
+
+
+class InvoiceItemForm(forms.ModelForm):
+	"""Form for InvoiceItem with stock selection and available qty display"""
+	
+	class Meta:
+		model = InvoiceItem
+		fields = ('stock', 'particulars', 'quantity', 'price', 'discount', 'gst')
+	
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		
+		# Build stock choices with available quantity info
+		stock_choices = [('', '-- Select Stock --')]
+		stock_items = Stock.objects.all().order_by('product')
+		
+		for stock in stock_items:
+			label = f"{stock.product} (Available: {stock.quantity})"
+			stock_choices.append((stock.sl_no, label))
+		
+		self.fields['stock'].widget = forms.Select(choices=stock_choices)
+		self.fields['stock'].required = False
+		self.fields['stock'].label = "Particulars"
+		
+		# Pre-fill particulars from stock if available
+		if self.instance.pk and self.instance.stock:
+			self.fields['particulars'].initial = self.instance.stock.product
+	
+	def clean(self):
+		cleaned_data = super().clean()
+		stock = cleaned_data.get('stock')
+		
+		if stock:
+			# Auto-fill particulars and price from stock
+			cleaned_data['particulars'] = stock.product
+			# Only set price from stock if user did not enter one
+			entered_price = cleaned_data.get('price')
+			if entered_price in (None, ""):
+				cleaned_data['price'] = stock.price or Decimal("0.00")
+		
+		return cleaned_data
+
 
 class EntryAdmin(admin.ModelAdmin):
 	list_display = ("sl_no", "date", "customer_name", "mobile_num", "product_status")
@@ -53,8 +96,9 @@ class FinanceAdmin(admin.ModelAdmin):
 
 class InvoiceItemInline(admin.TabularInline):
 	model = InvoiceItem
+	form = InvoiceItemForm
 	extra = 1
-	fields = ('particulars', 'quantity', 'price', 'discount', 'gst')
+	fields = ('stock', 'particulars', 'quantity', 'price', 'discount', 'gst')
 	verbose_name = "Particular"
 	verbose_name_plural = "Particulars"
 
@@ -83,6 +127,25 @@ class InvoiceAdmin(admin.ModelAdmin):
 		super().save_related(request, form, formsets, change)
 		# Recalculate totals after saving related items
 		form.instance.save()
+		
+		# Create Finance entry if invoice is PAID (on creation or status change)
+		invoice = form.instance
+		if invoice.payment_status == "PAID" and invoice.total_amount > 0:
+			# Check if Finance entry already exists for this invoice
+			from datetime import datetime
+			
+			if not Finance.objects.filter(
+				transaction_type="CREDIT",
+				amount=invoice.total_amount,
+				description__contains=f"Invoice {invoice.invoice_no}"
+			).exists():
+				Finance.objects.create(
+					date=datetime.now().date(),
+					transaction_type="CREDIT",
+					amount=invoice.total_amount,
+					reason="OTHER",
+					description=f"Invoice {invoice.invoice_no} - {invoice.customer_name}"
+				)
 
 	def print_link(self, obj):
 		url = reverse("admin:management_invoice_print", args=[obj.pk])

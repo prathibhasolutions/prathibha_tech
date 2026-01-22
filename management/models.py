@@ -1,5 +1,8 @@
 from decimal import Decimal
-from django.db import models
+from django.db import models, transaction
+from django.db.models.signals import pre_save, post_save, post_delete
+from django.dispatch import receiver
+from datetime import datetime
 
 class Entry(models.Model):
 	STATUS_CHOICES = [
@@ -137,6 +140,7 @@ class Invoice(models.Model):
 
 class InvoiceItem(models.Model):
 	invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='items')
+	stock = models.ForeignKey(Stock, on_delete=models.SET_NULL, null=True, blank=True, related_name='invoice_items')
 	particulars = models.CharField(max_length=500)
 	quantity = models.PositiveIntegerField(default=1)
 	price = models.DecimalField(max_digits=12, decimal_places=2)
@@ -233,3 +237,81 @@ class QuotationItem(models.Model):
 	
 	class Meta:
 		verbose_name_plural = "Quotation Items"
+
+# ============================================================================
+# SIGNAL HANDLERS FOR STOCK AND FINANCE MANAGEMENT
+# ============================================================================
+
+# Track old values for InvoiceItem updates
+_invoice_item_old_values = {}
+
+@receiver(pre_save, sender=InvoiceItem)
+def track_old_invoice_item_values(sender, instance, **kwargs):
+	"""Track old values before save for update detection"""
+	if instance.pk:
+		try:
+			old = InvoiceItem.objects.select_related('stock').get(pk=instance.pk)
+			_invoice_item_old_values[instance.pk] = {
+				'stock_id': old.stock.sl_no if old.stock else None,
+				'quantity': old.quantity or 0,
+				'stock': old.stock
+			}
+		except InvoiceItem.DoesNotExist:
+			pass
+
+
+@receiver(post_save, sender=InvoiceItem)
+def adjust_stock_on_invoice_item_save(sender, instance, created, **kwargs):
+	"""Adjust stock when invoice item is created or updated"""
+	if not instance.stock:
+		return
+	
+	if created:
+		# New item - deduct from stock
+		instance.stock.quantity = max(0, (instance.stock.quantity or 0) - (instance.quantity or 0))
+		instance.stock.save(update_fields=['quantity'])
+	else:
+		# Update - check if stock or quantity changed
+		old_values = _invoice_item_old_values.pop(instance.pk, None)
+		if old_values:
+			old_stock = old_values['stock']
+			old_qty = old_values['quantity']
+			new_stock = instance.stock
+			new_qty = instance.quantity or 0
+			
+			# If stock changed, return old qty to old stock
+			if old_stock and old_stock.sl_no != new_stock.sl_no:
+				old_stock.quantity = (old_stock.quantity or 0) + old_qty
+				old_stock.save(update_fields=['quantity'])
+			
+			# Adjust new stock by the difference
+			qty_diff = new_qty - old_qty
+			if qty_diff != 0:
+				new_stock.quantity = max(0, (new_stock.quantity or 0) - qty_diff)
+				new_stock.save(update_fields=['quantity'])
+
+
+@receiver(post_delete, sender=InvoiceItem)
+def adjust_stock_on_invoice_item_delete(sender, instance, **kwargs):
+	"""Restore stock when invoice item is deleted"""
+	if instance.stock:
+		instance.stock.quantity = (instance.stock.quantity or 0) + (instance.quantity or 0)
+		instance.stock.save(update_fields=['quantity'])
+
+
+# Track old payment status for Invoice (kept for potential future use)
+_invoice_old_payment_status = {}
+
+@receiver(pre_save, sender=Invoice)
+def track_old_invoice_payment_status(sender, instance, **kwargs):
+	"""Track old payment status before save"""
+	if instance.pk:
+		try:
+			old = Invoice.objects.get(pk=instance.pk)
+			_invoice_old_payment_status[instance.pk] = old.payment_status
+		except Invoice.DoesNotExist:
+			pass
+
+
+# Finance creation is now handled in admin.py save_related() method for proper timing
+# This ensures total_amount is calculated before Finance entry is created
