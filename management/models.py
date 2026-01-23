@@ -3,6 +3,7 @@ from django.db import models, transaction
 from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
 from datetime import datetime
+from django.contrib.contenttypes.models import ContentType
 
 class Entry(models.Model):
 	STATUS_CHOICES = [
@@ -237,6 +238,39 @@ class QuotationItem(models.Model):
 	
 	class Meta:
 		verbose_name_plural = "Quotation Items"
+
+
+class AuditEvent(models.Model):
+	ACTION_CHOICES = [
+		("LOGIN", "Login"),
+		("LOGOUT", "Logout"),
+		("ADD", "Add"),
+		("CHANGE", "Change"),
+		("DELETE", "Delete"),
+		("OTHER", "Other"),
+	]
+
+	created_at = models.DateTimeField(auto_now_add=True)
+	user_id = models.IntegerField(null=True, blank=True)
+	username = models.CharField(max_length=150, null=True, blank=True)
+	action = models.CharField(max_length=10, choices=ACTION_CHOICES)
+	content_type = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True, blank=True)
+	object_id = models.CharField(max_length=255, null=True, blank=True)
+	object_repr = models.CharField(max_length=255, null=True, blank=True)
+	message = models.TextField(blank=True, default="")
+	ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+	def delete(self, *args, **kwargs):
+		"""Prevent deletion to keep immutable audit history."""
+		raise PermissionError("AuditEvent records cannot be deleted")
+
+	def __str__(self):
+		return f"[{self.action}] {self.username or 'Unknown'} @ {self.created_at:%Y-%m-%d %H:%M:%S}"
+
+	class Meta:
+		ordering = ["-created_at"]
+		verbose_name = "History"
+		verbose_name_plural = "History"
 
 # ============================================================================
 # SIGNAL HANDLERS FOR STOCK AND FINANCE MANAGEMENT
