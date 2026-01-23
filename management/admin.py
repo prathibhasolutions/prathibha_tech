@@ -246,6 +246,8 @@ class CustomAdminSite(admin.AdminSite):
 		# Get unpaid invoices for dashboard
 		unpaid_invoices = Invoice.objects.filter(payment_status="UNPAID").order_by("-date", "-invoice_no")
 		extra_context['unpaid_invoices'] = unpaid_invoices
+		# Stocks that need refilling
+		extra_context['zero_stock_items'] = Stock.objects.filter(quantity__lte=0).order_by('product')
 		return super().index(request, extra_context)
 
 # Replace default admin site
