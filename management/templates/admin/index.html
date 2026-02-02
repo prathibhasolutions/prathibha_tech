@@ -1,12 +1,91 @@
 {% extends "admin/index.html" %}
+
+{% load i18n %}
+{% load static %}
+
+<style>
+.dashboard-grid {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 20px;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  width: 100%;
+}
+.dashboard-grid > .dashboard-card {
+  flex: 1 1 50%;
+  min-width: 0;
+}
+@media (max-width: 1023px) {
+  .dashboard-grid {
+    flex-wrap: wrap;
+  }
+  .dashboard-grid > .dashboard-card {
+    flex: 1 1 100%;
+  }
+}
+</style>
+
 {% block content %}
-    <div style="margin-bottom: 20px;">
-        <a href="/admin/current-stock/" class="button btn btn-info">View Current Stock</a>
+  <div style="margin-top:15px; display:flex; justify-content:flex-end;">
+    <a href="{{ history_url }}" style="background:#0d6efd; color:#fff; padding:10px 14px; border-radius:6px; text-decoration:none; font-weight:600;">History</a>
+  </div>
+  <div class="dashboard-grid" style="margin-top:30px; display:flex; flex-direction:row; gap:20px; align-items:stretch;">
+    <div class="dashboard-card" style="background:#fff; border: 1px solid #f5c2c7; border-radius: 4px; padding: 20px; box-shadow: 0 2px 6px rgba(220,53,69,0.08);">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div style="width:12px; height:12px; border-radius:50%; background:#dc3545; box-shadow:0 0 0 6px rgba(220,53,69,0.15);"></div>
+        <div style="flex:1;">
+          <h2 style="margin:0; color:#dc3545;">Inventory Refill Alert</h2>
+          <p style="margin:6px 0 0; color:#6c757d;">Click to view items with zero quantity that need restocking.</p>
+        </div>
+        <span style="background:#dc3545; color:#fff; padding:6px 10px; border-radius:12px; font-weight:600; min-width:48px; text-align:center;">{{ zero_stock_items|length }}</span>
+      </div>
+      <details style="margin-top:14px; border:1px dashed #f0aeb5; border-radius:4px; padding:12px; background:#fff6f7;" {% if zero_stock_items %} open{% endif %}>
+        <summary style="cursor:pointer; color:#c82333; font-weight:600;">Show stock items to refill</summary>
+        {% if zero_stock_items %}
+          <ul style="list-style:none; margin:12px 0 0; padding:0; display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:8px;">
+            {% for stock in zero_stock_items %}
+              <li style="border:1px solid #f0aeb5; border-radius:4px; padding:10px; background:#fff; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <div style="font-weight:600; color:#343a40;">{{ stock.product }}</div>
+                  <div style="font-size:12px; color:#6c757d;">SL No: {{ stock.sl_no }}</div>
+                </div>
+                <a href="/admin/management/stock/{{ stock.pk }}/change/" style="color:#c82333; font-weight:600; text-decoration:none;">Restock</a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p style="margin:12px 0 0; color:#198754; font-weight:600;">All stock items have quantity above zero.</p>
+        {% endif %}
+      </details>
     </div>
-    <div id="content-related">
-        {# Only show recent actions #}
-        {% block recentactions %}
-            {{ block.super }}
-        {% endblock %}
+
+    <div class="dashboard-card" style="background:#fff; border: 1px solid #ddd; border-radius: 4px; padding: 20px;">
+      <h2 style="margin-top: 0; color: #333;">Customer Due — Unpaid Invoices</h2>
+      {% if unpaid_invoices %}
+        <table style="width:100%; border-collapse: collapse;">
+          <thead>
+            <tr style="background: #f8f8f8; border-bottom: 2px solid #ddd;">
+              <th style="text-align:left; padding:12px; border-bottom: 2px solid #ddd;">Invoice No</th>
+              <th style="text-align:left; padding:12px; border-bottom: 2px solid #ddd;">Customer Name</th>
+              <th style="text-align:right; padding:12px; border-bottom: 2px solid #ddd;">Amount Due</th>
+              <th style="text-align:left; padding:12px; border-bottom: 2px solid #ddd;">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for inv in unpaid_invoices %}
+              <tr style="border-bottom: 1px solid #f0f0f0;">
+                <td style="padding:12px;"><a href="/admin/management/invoice/{{ inv.pk }}/change/" style="color: #0066cc; text-decoration: none;">{{ inv.invoice_no }}</a></td>
+                <td style="padding:12px; color:#dc3545; font-weight:600;">{{ inv.customer_name }}</td>
+                <td style="padding:12px; text-align:right; color:#dc3545; font-weight:600;">₹{{ inv.balance|floatformat:2 }}</td>
+                <td style="padding:12px;">{{ inv.date|date:"d M Y" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p style="margin:10px 0; color:#6c757d;">No unpaid invoices. Great job!</p>
+      {% endif %}
     </div>
+  </div>
 {% endblock %}

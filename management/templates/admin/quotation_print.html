@@ -1,0 +1,383 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Quotation {{ quotation.sl_no }}</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    @page {
+      size: A4;
+      margin: 8mm;
+    }
+    
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      .no-print {
+        display: none;
+      }
+    }
+    
+    body {
+      font-family: 'Arial', sans-serif;
+      color: #333;
+      background-color: white;
+      line-height: 1.2;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 0;
+    }
+    
+    .header-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 3px solid #1a5f8f;
+      padding: 8px 0 6px 0;
+      margin-bottom: 8px;
+    }
+    
+    .company-info {
+      flex: 1;
+    }
+    
+    .company-name {
+      font-size: 16px;
+      font-weight: bold;
+      color: #1a5f8f;
+      margin-bottom: 3px;
+    }
+    
+    .company-details {
+      font-size: 11px;
+      color: #666;
+      line-height: 1.3;
+    }
+    
+    .quotation-title {
+      text-align: right;
+      flex: 0.5;
+      padding-right: 20px;
+    }
+    
+    .quotation-title h1 {
+      font-size: 32px;
+      font-weight: bold;
+      color: #1a5f8f;
+      margin-bottom: 5px;
+    }
+    
+    .quotation-meta {
+      font-size: 11px;
+      color: #666;
+      text-align: right;
+    }
+    
+    .quotation-meta-row {
+      margin: 2px 0;
+    }
+    
+    .section {
+      margin-bottom: 8px;
+    }
+    
+    .section-title {
+      font-size: 12px;
+      font-weight: bold;
+      background-color: #f0f0f0;
+      padding: 5px 8px;
+      border-left: 3px solid #1a5f8f;
+      margin-bottom: 5px;
+    }
+    
+    .two-column {
+      display: flex;
+      gap: 40px;
+      margin-bottom: 10px;
+    }
+    
+    .column {
+      flex: 1;
+      font-size: 12px;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 8px;
+      font-size: 10px;
+    }
+    
+    table th {
+      background-color: #1a5f8f;
+      color: white;
+      padding: 5px 6px;
+      text-align: left;
+      font-weight: bold;
+      border: 1px solid #1a5f8f;
+    }
+    
+    table td {
+      padding: 4px 6px;
+      border: 1px solid #ddd;
+    }
+    
+    table tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    
+    .qty-col, .price-col, .total-col {
+      text-align: right;
+    }
+    
+    .amount-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 4px;
+      gap: 40px;
+    }
+    
+    .amount-row .label {
+      width: auto;
+      font-size: 10px;
+      min-width: 120px;
+    }
+    
+    .amount-row .value {
+      width: 100px;
+      text-align: right;
+      font-size: 10px;
+    }
+    
+    .total-box {
+      display: flex;
+      justify-content: flex-end;
+      gap: 40px;
+      padding: 8px;
+      background-color: #f0f0f0;
+      border: 2px solid #1a5f8f;
+      border-radius: 3px;
+      margin: 8px 0;
+    }
+    
+    .total-box .label {
+      width: auto;
+      font-size: 11px;
+      font-weight: bold;
+      min-width: 120px;
+    }
+    
+    .total-box .value {
+      width: 100px;
+      text-align: right;
+      font-size: 11px;
+      font-weight: bold;
+      color: #1a5f8f;
+    }
+    
+    .footer-section {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      padding-top: 6px;
+      border-top: 1px solid #ddd;
+    }
+    
+    .signature-block {
+      flex: 1;
+      text-align: center;
+      font-size: 9px;
+    }
+    
+    .thank-you {
+      text-align: center;
+      font-size: 9px;
+      color: #666;
+      margin-top: 6px;
+      padding: 6px;
+      background-color: #f9f9f9;
+      border-radius: 3px;
+    }
+    
+    .amount-in-words {
+      background-color: #fffbf0;
+      border: 1px solid #ddd;
+      padding: 5px;
+      margin: 6px 0;
+      font-size: 10px;
+      font-style: italic;
+      border-radius: 3px;
+    }
+    
+    .no-print {
+      margin-bottom: 20px;
+    }
+    
+    .print-btn {
+      padding: 10px 20px;
+      background-color: #1a5f8f;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .print-btn:hover {
+      background-color: #154a6b;
+    }
+  </style>
+</head>
+<body>
+  <div class="no-print" style="text-align: center; margin-bottom: 20px;">
+    <button class="print-btn" onclick="window.print()">🖨️ Print Quotation</button>
+  </div>
+
+  <div class="container">
+    <!-- Header -->
+    <div class="header-section">
+      <div style="display: flex; align-items: center; gap: 15px; flex: 1;">
+        <div class="logo" style="flex-shrink: 0;">
+          <img src="{% static 'management/img/logo.png' %}" alt="Logo" style="max-width: 80px; max-height: 80px;">
+        </div>
+        <div class="company-info">
+          <div class="company-name">{{ company }}</div>
+          <div class="company-details">
+            <div>📍 Beside Bank of Maharashtra, Namdevwada, Nizamabad-503001</div>
+            <div>📱 +91 9963173670</div>
+          </div>
+        </div>
+      </div>
+      <div class="quotation-title">
+        <h1>QUOTATION</h1>
+        <div class="quotation-meta">
+          <div class="quotation-meta-row"><strong>Quotation #:</strong> {{ quotation.sl_no }}</div>
+          <div class="quotation-meta-row"><strong>Date:</strong> {{ quotation.date|date:"d M Y" }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Customer Details -->
+    <div class="section">
+      <div class="two-column">
+        <div class="column">
+          <div class="section-title">QUOTE TO</div>
+          <div style="margin-left: 0;">
+            <div><strong>{{ quotation.customer_name }}</strong></div>
+            <div style="color: #666; font-size: 11px; margin-top: 3px;">
+              {% if quotation.customer_address %}
+                {{ quotation.customer_address|linebreaksbr }}
+              {% endif %}
+              <div>📱 {{ quotation.mobile_num }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <div class="section-title">VALIDITY</div>
+          <div style="margin-left: 0; color: #666; font-size: 11px;">
+            30 Days from the date of quotation
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Line Items -->
+    <div class="section">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 5%;">S.No</th>
+            <th style="width: 30%;">Particulars</th>
+            <th style="width: 10%;" class="qty-col">Quantity</th>
+            <th style="width: 12%;" class="price-col">Unit Price</th>
+            <th style="width: 10%;" class="price-col">Discount</th>
+            <th style="width: 8%;" class="qty-col">GST %</th>
+            <th style="width: 15%;" class="total-col">Total Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in quotation.items.all %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ item.particulars }}</td>
+              <td class="qty-col">{{ item.quantity }}</td>
+              <td class="price-col">₹ {{ item.price|floatformat:2 }}</td>
+              <td class="price-col">₹ {{ item.discount|floatformat:2 }}</td>
+              <td class="qty-col">{{ item.gst|floatformat:2 }}%</td>
+              <td class="total-col">₹ {{ item.total|floatformat:2 }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Amount Calculations -->
+    <div class="section">
+      <div style="display: flex; gap: 60%;">
+        <div style="flex: 1;"></div>
+        <div style="flex: 0.4;">
+          <div class="amount-row">
+            <div class="label">Subtotal:</div>
+            <div class="value">₹ {{ quotation.calculate_total_with_items|floatformat:2 }}</div>
+          </div>
+          {% if quotation.discount > 0 %}
+            <div class="amount-row">
+              <div class="label">Quotation Discount:</div>
+              <div class="value">- ₹ {{ quotation.discount|floatformat:2 }}</div>
+            </div>
+          {% endif %}
+          {% if quotation.gst > 0 %}
+            <div class="amount-row">
+              <div class="label">Quotation GST ({{ quotation.gst }}%):</div>
+              <div class="value">₹ {% widthratio quotation.calculate_total_with_items quotation.gst 100 as gst_amount %}{{ gst_amount|floatformat:2 }}</div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="total-box">
+        <div class="label">TOTAL QUOTATION AMOUNT:</div>
+        <div class="value">₹ {{ quotation.total|floatformat:2 }}</div>
+      </div>
+
+      <div class="amount-in-words">
+        <strong>Amount in Words:</strong> {{ amount_words }}
+      </div>
+    </div>
+
+    <!-- Notes -->
+    {% if quotation.notes %}
+      <div class="section">
+        <div class="section-title">NOTES</div>
+        <div style="font-size: 11px; color: #666; padding: 8px; background-color: #f9f9f9; border-radius: 3px;">
+          {{ quotation.notes|linebreaksbr }}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Footer -->
+    <div class="footer-section">
+      <div class="signature-block">
+        <div style="margin-top: 80px; text-align: right; padding-right: 20px;">
+          <div style="border-top: 1px solid #333; width: 150px; display: inline-block; padding-top: 3px; font-size: 9px; text-align: center;">
+            Authorized Signatory
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="thank-you">
+      Thank you for your interest! 🙏
+    </div>

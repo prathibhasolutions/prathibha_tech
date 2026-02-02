@@ -1,0 +1,49 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+  <h1 style="margin-top: 10px;">History</h1>
+  <p style="color:#6c757d; margin-bottom: 16px;">All admin operations, login and logout events. Immutable and view-only.</p>
+  <table class="adminlist" style="width:100%; border-collapse:collapse;">
+    <thead>
+      <tr>
+        <th style="padding:8px; border-bottom:1px solid #ddd;">When</th>
+        <th style="padding:8px; border-bottom:1px solid #ddd;">Action</th>
+        <th style="padding:8px; border-bottom:1px solid #ddd;">User</th>
+        <th style="padding:8px; border-bottom:1px solid #ddd;">Object</th>
+        <th style="padding:8px; border-bottom:1px solid #ddd;">Details</th>
+        <th style="padding:8px; border-bottom:1px solid #ddd;">IP</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ev in events %}
+        <tr style="border-bottom:1px solid #f0f0f0;">
+          <td style="padding:8px; white-space:nowrap;">{{ ev.created_at|date:"Y-m-d H:i:s" }}</td>
+          <td style="padding:8px; font-weight:600;">{{ ev.action }}</td>
+          <td style="padding:8px;">{{ ev.username|default:"—" }}</td>
+          <td style="padding:8px;">{{ ev.object_repr|default:"—" }}</td>
+          <td style="padding:8px; max-width:360px;">{{ ev.message|default:"" }}</td>
+          <td style="padding:8px;">{{ ev.ip_address|default:"—" }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6" style="padding:12px; text-align:center; color:#6c757d;">No history yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if is_paginated %}
+    <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="button">Previous</a>
+      {% else %}
+        <span class="button disabled">Previous</span>
+      {% endif %}
+      <span>Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="button">Next</a>
+      {% else %}
+        <span class="button disabled">Next</span>
+      {% endif %}
+    </div>
+  {% endif %}
+{% endblock %}

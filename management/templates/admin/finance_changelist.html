@@ -1,0 +1,60 @@
+{% extends "admin/change_list.html" %}
+
+{% block content %}
+<style>
+    .finance-summary {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .summary-button {
+        padding: 12px 20px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background-color: #f8f9fa;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: not-allowed;
+        opacity: 0.6;
+        min-width: 150px;
+        text-align: center;
+    }
+    
+    .summary-button.balance {
+        background-color: #e8f4f8;
+        border-color: #0c63e4;
+        color: #0c63e4;
+    }
+    
+    .summary-button.credits {
+        background-color: #e8f5e9;
+        border-color: #28a745;
+        color: #28a745;
+    }
+    
+    .summary-button.debits {
+        background-color: #ffebee;
+        border-color: #dc3545;
+        color: #dc3545;
+    }
+</style>
+
+<div class="finance-summary">
+    <button class="summary-button balance" disabled>
+        <strong>Current Balance</strong><br>
+        {{ current_balance }}
+    </button>
+    <button class="summary-button credits" disabled>
+        <strong>Total Credits</strong><br>
+        {{ total_credits }}
+    </button>
+    <button class="summary-button debits" disabled>
+        <strong>Total Debits</strong><br>
+        {{ total_debits }}
+    </button>
+</div>
+
+{{ block.super }}
+{% endblock %}
