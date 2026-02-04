@@ -194,9 +194,17 @@ class FinanceAdmin(AuditedModelAdmin):
 	def changelist_view(self, request, extra_context=None):
 		extra_context = extra_context or {}
 		
-		# Calculate totals
-		credits = Finance.objects.filter(transaction_type="CREDIT").aggregate(total=models.Sum("amount"))["total"] or 0
-		debits = Finance.objects.filter(transaction_type="DEBIT").aggregate(total=models.Sum("amount"))["total"] or 0
+		date_from = request.GET.get("date__gte")
+		date_to = request.GET.get("date__lte")
+		base_qs = Finance.objects.all()
+		if date_from:
+			base_qs = base_qs.filter(date__gte=date_from)
+		if date_to:
+			base_qs = base_qs.filter(date__lte=date_to)
+		
+		# Calculate totals (respect date range filter)
+		credits = base_qs.filter(transaction_type="CREDIT").aggregate(total=models.Sum("amount"))["total"] or 0
+		debits = base_qs.filter(transaction_type="DEBIT").aggregate(total=models.Sum("amount"))["total"] or 0
 		balance = credits - debits
 		
 		extra_context["total_credits"] = f"₹{credits:,.2f}"
