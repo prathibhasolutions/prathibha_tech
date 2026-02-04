@@ -15,6 +15,31 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator
 
 
+class DateRangeFilter(admin.SimpleListFilter):
+	"""From/To date range filter for DateField admin list views."""
+	title = "Date range"
+	parameter_name = "date_range"
+	template = "admin/date_range_filter.html"
+
+	def expected_parameters(self):
+		return ["date__gte", "date__lte"]
+
+	def lookups(self, request, model_admin):
+		return ()
+
+	def has_output(self):
+		return True
+
+	def queryset(self, request, queryset):
+		date_from = self.used_parameters.get("date__gte")
+		date_to = self.used_parameters.get("date__lte")
+		if date_from:
+			queryset = queryset.filter(date__gte=date_from)
+		if date_to:
+			queryset = queryset.filter(date__lte=date_to)
+		return queryset
+
+
 class AuditedModelAdmin(admin.ModelAdmin):
 	"""ModelAdmin that mirrors admin log actions into immutable AuditEvent."""
 
@@ -151,7 +176,7 @@ class StockAdmin(AuditedModelAdmin):
 
 class FinanceAdmin(AuditedModelAdmin):
 	list_display = ("sl_no", "date", "transaction_type", "amount", "reason")
-	list_filter = ("transaction_type", "date")
+	list_filter = ("transaction_type", DateRangeFilter)
 	search_fields = ("reason", "description")
 	change_list_template = "admin/finance_changelist.html"
 
@@ -192,7 +217,7 @@ class InvoiceItemInline(admin.TabularInline):
 
 class InvoiceAdmin(AuditedModelAdmin):
 	list_display = ("invoice_no", "date", "customer_name", "mobile_num", "total_amount", "balance", "payment_status", "print_link")
-	list_filter = ("date", "payment_status")
+	list_filter = (DateRangeFilter, "payment_status")
 	search_fields = ("invoice_no", "customer_name", "mobile_num")
 	readonly_fields = ("invoice_no", "total_amount", "balance")
 	inlines = [InvoiceItemInline]
