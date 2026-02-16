@@ -159,7 +159,7 @@ class InvoiceItemForm(forms.ModelForm):
 			# Only set price from stock if user did not enter one
 			entered_price = cleaned_data.get('price')
 			if entered_price in (None, ""):
-				cleaned_data['price'] = stock.price or Decimal("0.00")
+				cleaned_data['price'] = stock.sale_price or Decimal("0.00")
 		
 		return cleaned_data
 
@@ -170,7 +170,7 @@ class EntryAdmin(AuditedModelAdmin):
 	search_fields = ("customer_name", "mobile_num", "product_issue")
 
 class StockAdmin(AuditedModelAdmin):
-	list_display = ("sl_no", "date", "product","price", "serial_number", "quantity")
+	list_display = ("sl_no", "date", "product","sale_price", "serial_number", "quantity")
 	list_filter = ("date",)
 	search_fields = ("product", "serial_number")
 
@@ -282,8 +282,10 @@ class InvoiceAdmin(AuditedModelAdmin):
 
 	def print_view(self, request, object_id):
 		obj = self.get_object(request, object_id)
-		qr_code = generate_phonepe_qr(obj.total_amount)
-		amount_words = amount_to_words(obj.total_amount)
+		# Calculate total due after subtracting advance
+		total_due = obj.total_amount - (obj.advance_amount or 0)
+		qr_code = generate_phonepe_qr(total_due)
+		amount_words = amount_to_words(total_due)
 		context = {
 			**self.admin_site.each_context(request),
 			"title": f"Invoice {obj.invoice_no}",
@@ -291,6 +293,7 @@ class InvoiceAdmin(AuditedModelAdmin):
 			"company": "Prathibha Computer & Hardware Services",
 			"qr_code": qr_code,
 			"amount_words": amount_words,
+			"total_due": total_due,
 		}
 		return TemplateResponse(request, "admin/invoice_print.html", context)
 
@@ -305,6 +308,35 @@ class QuotationItemInline(admin.TabularInline):
 
 
 class QuotationAdmin(AuditedModelAdmin):
+
+	actions = ["duplicate_quotation"]
+
+	def duplicate_quotation(self, request, queryset):
+		for quotation in queryset:
+			# Duplicate the quotation
+			quotation_fields = {
+				field.name: getattr(quotation, field.name)
+				for field in quotation._meta.fields
+				if field.name not in ["id", "sl_no"]
+			}
+			new_quotation = Quotation.objects.create(**quotation_fields)
+			# Duplicate related items
+			for item in quotation.items.all():
+				item_fields = {
+					field.name: getattr(item, field.name)
+					for field in item._meta.fields
+					if field.name not in ["id", "quotation"]
+				}
+				QuotationItem.objects.create(quotation=new_quotation, **item_fields)
+			# Now calculate subtotal from new_quotation's items
+			subtotal = sum([
+				item.quantity * item.price for item in new_quotation.items.all()
+			])
+			new_quotation.total = subtotal
+			new_quotation.save()
+		self.message_user(request, "Selected quotations duplicated successfully.")
+	duplicate_quotation.short_description = "Duplicate selected quotations"
+
 	list_display = ("sl_no", "date", "customer_name", "mobile_num", "total", "print_link")
 	list_filter = ("date",)
 	search_fields = ("sl_no", "customer_name", "mobile_num")
@@ -355,12 +387,14 @@ class QuotationAdmin(AuditedModelAdmin):
 		return TemplateResponse(request, "admin/quotation_print.html", context)
 
 
+	# ...existing code...
+
 # Customize admin branding and index view
 class CustomAdminSite(admin.AdminSite):
 	site_header = "Prathibha Computer & Hardware Services"
 	site_title = "Prathibha Computer & Hardware Services"
 	index_title = "Prathibha Computer & Hardware Services"
-	
+
 	def log_action(self, user_id, content_type_id, object_id, object_repr, action_flag, change_message=None):
 		"""Log to default LogEntry plus immutable AuditEvent."""
 		super().log_action(user_id, content_type_id, object_id, object_repr, action_flag, change_message)
@@ -376,7 +410,7 @@ class CustomAdminSite(admin.AdminSite):
 			content_type_id=content_type_id,
 			object_id=object_id,
 			object_repr=object_repr,
-			message=change_message or "",
+			message=change_message,
 		)
 
 	@staticmethod
@@ -420,7 +454,7 @@ class CustomAdminSite(admin.AdminSite):
 		extra_context['history_url'] = reverse('admin:audit_history')
 		return super().index(request, extra_context)
 
-# Replace default admin site
+	# Replace default admin site
 django_admin.site = CustomAdminSite(name='admin')
 
 # Re-register all models with custom admin site

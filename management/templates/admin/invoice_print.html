@@ -383,7 +383,7 @@
 
       <div class="total-box">
         <div class="label">TOTAL AMOUNT DUE:</div>
-        <div class="value">₹ {{ invoice.total_amount|floatformat:2 }}</div>
+        <div class="value">₹ {{ total_due|floatformat:2 }}</div>
       </div>
 
       {% if invoice.balance > 0 %}
@@ -391,7 +391,7 @@
           <strong>Amount in Words:</strong> {{ amount_words }}
         </div>
         <div class="amount-in-words">
-          <strong>Balance Due:</strong> ₹ {{ invoice.balance|floatformat:2 }}
+          <strong>Balance Due:</strong> ₹ {{ total_due|floatformat:2 }}
         </div>
       {% endif %}
     </div>
@@ -446,7 +446,7 @@
       <div class="qr-section">
         {% if qr_code %}
           <img src="{{ qr_code }}" alt="PhonePe QR Code">
-          <div class="qr-label">Scan to Pay via PhonePe</div>
+          <div class="qr-label">Scan to Pay ₹{{ total_due|floatformat:2 }} via PhonePe</div>
         {% endif %}
       </div>
     </div>
