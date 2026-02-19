@@ -7,3 +7,52 @@
   max-height: 40px !important;
   width: auto;
 }
+
+/* Date range filter styling */
+#changelist-filter .date-range-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+}
+
+#changelist-filter .date-range-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+#changelist-filter .date-range-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#changelist-filter .date-range-field label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #495057;
+}
+
+#changelist-filter .date-range-field .form-control {
+  height: 36px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.9rem;
+}
+
+#changelist-filter .date-range-actions {
+  display: flex;
+  gap: 10px;
+}
+
+#changelist-filter .date-range-actions .btn {
+  flex: 1;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 1200px) {
+  #changelist-filter .date-range-fields {
+    grid-template-columns: 1fr;
+  }
+}
