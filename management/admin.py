@@ -28,11 +28,17 @@ class DateRangeFilter(admin.SimpleListFilter):
 		return ()
 
 	def has_output(self):
+		# Always show the filter UI
 		return True
 
 	def queryset(self, request, queryset):
-		date_from = self.used_parameters.get("date__gte")
-		date_to = self.used_parameters.get("date__lte")
+		# Remove empty parameters to avoid interfering with other filters/search
+		date_from = self.used_parameters.get("date__gte") or None
+		date_to = self.used_parameters.get("date__lte") or None
+		if not date_from:
+			self.used_parameters.pop("date__gte", None)
+		if not date_to:
+			self.used_parameters.pop("date__lte", None)
 		if date_from:
 			queryset = queryset.filter(date__gte=date_from)
 		if date_to:
@@ -166,12 +172,12 @@ class InvoiceItemForm(forms.ModelForm):
 
 class EntryAdmin(AuditedModelAdmin):
 	list_display = ("sl_no", "date", "customer_name", "mobile_num", "product_status")
-	list_filter = ("product_status", "date")
+	list_filter = ("product_status", DateRangeFilter)
 	search_fields = ("customer_name", "mobile_num", "product_issue")
 
 class StockAdmin(AuditedModelAdmin):
 	list_display = ("sl_no", "date", "product","sale_price", "serial_number", "quantity")
-	list_filter = ("date",)
+	list_filter = (DateRangeFilter,)
 	search_fields = ("product", "serial_number")
 
 class FinanceAdmin(AuditedModelAdmin):
@@ -338,7 +344,7 @@ class QuotationAdmin(AuditedModelAdmin):
 	duplicate_quotation.short_description = "Duplicate selected quotations"
 
 	list_display = ("sl_no", "date", "customer_name", "mobile_num", "total", "print_link")
-	list_filter = ("date",)
+	list_filter = (DateRangeFilter,)
 	search_fields = ("sl_no", "customer_name", "mobile_num")
 	readonly_fields = ("total",)
 	inlines = [QuotationItemInline]

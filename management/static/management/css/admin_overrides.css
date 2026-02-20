@@ -1,3 +1,26 @@
+/* True single horizontal line for date range filter */
+#changelist-filter .date-range-fields.single-horizontal-line {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+/* Single line date range filter */
+#changelist-filter .date-range-fields.single-line {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 12px;
+}
+#changelist-filter .date-range-fields.single-line .date-range-field {
+  margin-bottom: 0;
+}
+#changelist-filter .date-range-fields.single-line .date-range-actions {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
 .login-logo img {
   max-height: 140px !important;
   width: auto;

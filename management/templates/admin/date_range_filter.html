@@ -1,18 +1,8 @@
 {% load i18n %}
-<h3>{% blocktrans with filter_title=title %} By {{ filter_title }} {% endblocktrans %}</h3>
-<form method="get" action="" class="date-range-filter">
-  <div class="date-range-fields">
-    <div class="date-range-field">
-      <label for="date_from">{% trans "From" %}</label>
-      <input type="date" id="date_from" name="date__gte" value="{{ request.GET.date__gte|default:'' }}" class="form-control">
-    </div>
-    <div class="date-range-field">
-      <label for="date_to">{% trans "To" %}</label>
-      <input type="date" id="date_to" name="date__lte" value="{{ request.GET.date__lte|default:'' }}" class="form-control">
-    </div>
-  </div>
-  <div class="date-range-actions">
-    <button type="submit" class="btn btn-primary btn-sm">{% trans "Filter" %}</button>
-    <a href="?" class="btn btn-secondary btn-sm">{% trans "Reset" %}</a>
-  </div>
-</form>
+<div class="date-range-fields single-horizontal-line" style="display:flex; flex-direction:row; align-items:center; gap:10px; flex-wrap:nowrap;">
+  <label for="date_from" style="margin-bottom:0; font-weight:600; margin-right:4px;">{% trans "From" %}</label>
+  <input type="date" id="date_from" name="date__gte" value="{{ request.GET.date__gte|default:'' }}" class="form-control" style="width:auto; margin-right:12px;">
+  <label for="date_to" style="margin-bottom:0; font-weight:600; margin-right:4px;">{% trans "To" %}</label>
+  <input type="date" id="date_to" name="date__lte" value="{{ request.GET.date__lte|default:'' }}" class="form-control" style="width:auto; margin-right:12px;">
+  <a href="?" class="btn btn-secondary btn-sm">{% trans "Reset" %}</a>
+</div>
