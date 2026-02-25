@@ -175,16 +175,22 @@ class EntryAdmin(AuditedModelAdmin):
 	list_filter = ("product_status", DateRangeFilter)
 	search_fields = ("customer_name", "mobile_num", "product_issue")
 
+
+
 class StockAdmin(AuditedModelAdmin):
-	list_display = ("sl_no", "date", "product","sale_price", "serial_number", "quantity")
+	list_display = ("sl_no", "date", "product", "sale_price", "serial_number", "quantity")
 	list_filter = (DateRangeFilter,)
 	search_fields = ("product", "serial_number")
+
+
 
 class FinanceAdmin(AuditedModelAdmin):
 	list_display = ("sl_no", "date", "transaction_type", "amount", "reason")
 	list_filter = ("transaction_type", DateRangeFilter)
 	search_fields = ("reason", "description")
 	change_list_template = "admin/finance_changelist.html"
+
+
 
 	def get_form(self, request, obj=None, **kwargs):
 		from django import forms
@@ -243,6 +249,8 @@ class InvoiceAdmin(AuditedModelAdmin):
 			"fields": ("discount", "gst", "advance_amount", "total_amount", "balance", "payment_status", "notes")
 		}),
 	)
+
+
 
 	def save_model(self, request, obj, form, change):
 		super().save_model(request, obj, form, change)
@@ -313,6 +321,7 @@ class QuotationItemInline(admin.TabularInline):
 	verbose_name_plural = "Particulars"
 
 
+
 class QuotationAdmin(AuditedModelAdmin):
 
 	actions = ["duplicate_quotation"]
@@ -348,6 +357,8 @@ class QuotationAdmin(AuditedModelAdmin):
 	search_fields = ("sl_no", "customer_name", "mobile_num")
 	readonly_fields = ("total",)
 	inlines = [QuotationItemInline]
+
+
 	fieldsets = (
 		("Quotation Details", {
 			"fields": ("date", "customer_name", "mobile_num", "customer_address")
