@@ -304,7 +304,7 @@ class InvoiceAdmin(AuditedModelAdmin):
 			**self.admin_site.each_context(request),
 			"title": f"Invoice {obj.invoice_no}",
 			"invoice": obj,
-			"company": "Prathibha Computer & Hardware Services",
+			   "company": "Prathibha Computers & Hardware Services",
 			"qr_code": qr_code,
 			"amount_words": amount_words,
 			"total_due": total_due,
@@ -466,6 +466,9 @@ class CustomAdminSite(admin.AdminSite):
 		# Get unpaid invoices for dashboard
 		unpaid_invoices = Invoice.objects.filter(payment_status="UNPAID").order_by("-date", "-invoice_no")
 		extra_context['unpaid_invoices'] = unpaid_invoices
+		# Calculate total due amount
+		total_due = sum(inv.balance for inv in unpaid_invoices)
+		extra_context['total_due_unpaid_invoices'] = total_due
 		# Stocks that need refilling
 		extra_context['zero_stock_items'] = Stock.objects.filter(quantity__lte=0).order_by('product')
 		extra_context['history_url'] = reverse('admin:audit_history')
