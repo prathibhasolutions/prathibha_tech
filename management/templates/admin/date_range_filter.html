@@ -1,0 +1,8 @@
+{% load i18n %}
+<div class="date-range-fields single-horizontal-line" style="display:flex; flex-direction:row; align-items:center; gap:10px; flex-wrap:nowrap;">
+  <label for="date_from" style="margin-bottom:0; font-weight:600; margin-right:4px;">{% trans "From" %}</label>
+  <input type="date" id="date_from" name="date__gte" value="{{ request.GET.date__gte|default:'' }}" class="form-control" style="width:auto; margin-right:12px;">
+  <label for="date_to" style="margin-bottom:0; font-weight:600; margin-right:4px;">{% trans "To" %}</label>
+  <input type="date" id="date_to" name="date__lte" value="{{ request.GET.date__lte|default:'' }}" class="form-control" style="width:auto; margin-right:12px;">
+  <a href="?" class="btn btn-secondary btn-sm">{% trans "Reset" %}</a>
+</div>

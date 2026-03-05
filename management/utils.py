@@ -32,7 +32,7 @@ def generate_phonepe_qr(amount, phone_number=""):
         amount_str = f"{float(amount):.2f}"
         
         # UPI string format
-        upi_string = f"upi://pay?pa=j.rakesh8252@ybl&pn=Prathibha Computer & Hardware Services&am={amount_str}&tn=Invoice"
+        upi_string = f"upi://pay?pa=9963173670-2@ybl&pn=Prathibha Computers & Hardware Services&am={amount_str}&tn=Invoice"
         
         # Generate QR code
         qr = qrcode.QRCode(

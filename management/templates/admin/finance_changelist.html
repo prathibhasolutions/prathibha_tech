@@ -20,6 +20,8 @@
         opacity: 0.6;
         min-width: 150px;
         text-align: center;
+        margin-left: 8px;
+        margin-right: 8px;
     }
     
     .summary-button.balance {
@@ -55,6 +57,49 @@
         {{ total_debits }}
     </button>
 </div>
+<div style="display: flex; justify-content: flex-end; align-items: center; margin-top: 48px; margin-right: 48px; margin-bottom: 32px;">
+    <button onclick="printFinanceTable()" style="padding: 6px 18px; font-size: 15px;" class="btn btn-secondary">Print</button>
+</div>
+
+<script>
+function printFinanceTable() {
+    var table = document.querySelector('table');
+    if (!table) {
+        alert('No table found to print.');
+        return;
+    }
+    // Clone table to remove checkbox column for print
+    var clone = table.cloneNode(true);
+    // Remove first column (checkbox) from header and rows
+    var thead = clone.querySelector('thead');
+    if (thead && thead.rows[0].cells[0].querySelector('input[type="checkbox"]')) {
+        thead.rows[0].deleteCell(0);
+    }
+    var rows = clone.querySelectorAll('tbody tr');
+    rows.forEach(function(row) {
+        if (row.cells[0] && row.cells[0].querySelector('input[type="checkbox"]')) {
+            row.deleteCell(0);
+        }
+    });
+    var printWindow = window.open('', '', 'height=600,width=800');
+    printWindow.document.write('<html><head><title>Print Finance Table</title>');
+    printWindow.document.write('<style>\n'
+        + 'body { font-family: Arial, sans-serif; margin: 20px; }\n'
+        + 'table { width: 100%; border-collapse: collapse; font-size: 15px; background: #fff; box-shadow: 0 2px 8px #eee; }\n'
+        + 'th { background: #f4f6fa; color: #333; font-weight: 600; padding: 10px; border: 1px solid #d1d5db; }\n'
+        + 'td { padding: 10px; border: 1px solid #e5e7eb; color: #222; }\n'
+        + 'tr:nth-child(even) { background: #f9fafb; }\n'
+        + 'tr:hover { background: #e3e8ef; }\n'
+        + '</style>');
+    printWindow.document.write('</head><body >');
+    printWindow.document.write(clone.outerHTML);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+}
+</script>
 
 {{ block.super }}
 {% endblock %}

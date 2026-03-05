@@ -283,7 +283,7 @@
         <div class="company-info">
           <div class="company-name">{{ company }}</div>
           <div class="company-details">
-            <div>📍 Beside Bank of Maharashtra, Namdevwada, Nizamabad-503001</div>
+            <div>📍 Beside Bank of Maharashtra, Namdevwada, Nizamabad-503002</div>
             <div>📱 +91 9963173670 | +91 8519826616</div>
           </div>
         </div>
@@ -383,7 +383,7 @@
 
       <div class="total-box">
         <div class="label">TOTAL AMOUNT DUE:</div>
-        <div class="value">₹ {{ invoice.total_amount|floatformat:2 }}</div>
+        <div class="value">₹ {{ total_due|floatformat:2 }}</div>
       </div>
 
       {% if invoice.balance > 0 %}
@@ -391,7 +391,7 @@
           <strong>Amount in Words:</strong> {{ amount_words }}
         </div>
         <div class="amount-in-words">
-          <strong>Balance Due:</strong> ₹ {{ invoice.balance|floatformat:2 }}
+          <strong>Balance Due:</strong> ₹ {{ total_due|floatformat:2 }}
         </div>
       {% endif %}
     </div>
@@ -427,16 +427,17 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 0 20px;">
           <div style="margin-top: 80px;">
             {% if invoice.payment_status == "PAID" %}
-              <div style="font-size: 32px; font-weight: bold; color: #28a745; border: 3px solid #28a745; padding: 8px 20px; transform: rotate(-10deg); display: inline-block;">
-                PAID
+              <div style="display: flex; justify-content: center; align-items: center; margin-top: 10px;">
+                <img src="{% static 'management/img/paid_stamp.png' %}" alt="PAID" style="max-width: 140px; max-height: 140px; opacity: 0.85; filter: drop-shadow(0 2px 6px #1a5f8f33);">
               </div>
             {% else %}
-              <div style="font-size: 32px; font-weight: bold; color: #dc3545; border: 3px solid #dc3545; padding: 8px 20px; transform: rotate(-10deg); display: inline-block;">
-                UNPAID
+              <div style="display: flex; justify-content: center; align-items: center; margin-top: 10px;">
+                <img src="{% static 'management/img/unpaid_stamp.png' %}" alt="UNPAID" style="max-width: 140px; max-height: 140px; opacity: 0.85; filter: drop-shadow(0 2px 6px #dc354533);">
               </div>
             {% endif %}
           </div>
-          <div>
+          <div style="text-align: center;">
+            <img src="{% static 'management/img/sign.png' %}" alt="Signature" style="max-width: 120px; max-height: 60px; margin-bottom: 2px; display: block; margin-left: auto; margin-right: auto;">
             <div style="border-top: 1px solid #333; width: 150px; display: inline-block; padding-top: 3px; font-size: 9px; text-align: center;">
               Authorized Signatory
             </div>
@@ -446,7 +447,7 @@
       <div class="qr-section">
         {% if qr_code %}
           <img src="{{ qr_code }}" alt="PhonePe QR Code">
-          <div class="qr-label">Scan to Pay via PhonePe</div>
+          <div class="qr-label">Scan to Pay ₹{{ total_due|floatformat:2 }} via PhonePe</div>
         {% endif %}
       </div>
     </div>
