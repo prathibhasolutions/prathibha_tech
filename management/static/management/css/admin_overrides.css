@@ -79,3 +79,64 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Admin changelist pagination buttons */
+.change-list .pagination {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.change-list .pagination li {
+  list-style: none;
+}
+
+.change-list .pagination li a,
+.change-list .pagination li span,
+.change-list .pagination li.this-page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1f2937;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  transition: all 0.18s ease;
+}
+
+.change-list .pagination li a:hover {
+  border-color: #0d6efd;
+  background: #eff6ff;
+  color: #0d6efd;
+}
+
+.change-list .pagination li.this-page {
+  border-color: #0d6efd;
+  background: #0d6efd;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(13, 110, 253, 0.24);
+}
+
+.change-list .pagination li a:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 1px;
+}
+
+@media (max-width: 768px) {
+  .change-list .pagination li a,
+  .change-list .pagination li span,
+  .change-list .pagination li.this-page {
+    min-width: 30px;
+    height: 30px;
+    padding: 0 8px;
+    font-size: 0.8125rem;
+  }
+}
