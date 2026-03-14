@@ -1,5 +1,59 @@
 {% load i18n admin_list jazzmin %}
 
+<style>
+    .admin-pager {
+        display: flex !important;
+        gap: 6px !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        flex-wrap: wrap !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        list-style: none !important;
+    }
+
+    .admin-pager li {
+        list-style: none !important;
+    }
+
+    .admin-pager li a,
+    .admin-pager li span,
+    .admin-pager li.this-page {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-width: 34px !important;
+        height: 34px !important;
+        padding: 0 10px !important;
+        border: 1px solid #d1d5db !important;
+        border-radius: 8px !important;
+        background: #ffffff !important;
+        color: #1f2937 !important;
+        font-size: 0.875rem !important;
+        font-weight: 600 !important;
+        line-height: 1 !important;
+        text-decoration: none !important;
+    }
+
+    .admin-pager li a:hover {
+        border-color: #0d6efd !important;
+        background: #eff6ff !important;
+        color: #0d6efd !important;
+    }
+
+    .admin-pager li.this-page {
+        border-color: #0d6efd !important;
+        background: #0d6efd !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(13, 110, 253, 0.24) !important;
+    }
+
+    .admin-pager li a:focus-visible {
+        outline: 2px solid #93c5fd !important;
+        outline-offset: 1px !important;
+    }
+</style>
+
 <div class="row pt-3">
     <div class="col-5">
         <div class="dataTables_info" role="status" aria-live="polite">
@@ -21,7 +75,7 @@
     </div>
 
     <div class="col-7">
-        <ul class="pagination pagination-sm m-0 float-right">
+        <ul class="pagination pagination-sm m-0 float-right admin-pager">
             {% if pagination_required %}
                 {% for i in page_range %}
                     {% paginator_number cl i %}
