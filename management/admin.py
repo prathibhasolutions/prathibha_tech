@@ -13,6 +13,7 @@ from django.contrib.admin.models import ADDITION, CHANGE, DELETION
 from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.contrib.contenttypes.models import ContentType
 from django.core.paginator import Paginator
+from django.utils.dateparse import parse_date
 
 
 class DateRangeFilter(admin.SimpleListFilter):
@@ -20,6 +21,13 @@ class DateRangeFilter(admin.SimpleListFilter):
 	title = "Date range"
 	parameter_name = "date_range"
 	template = "admin/date_range_filter.html"
+
+	def __init__(self, request, params, model, model_admin):
+		super().__init__(request, params, model, model_admin)
+		# Pop date params from lookup_params so Django doesn't treat them as
+		# raw ORM filters (empty strings cause a ValueError -> ?e=1 redirect).
+		self.used_parameters['date__gte'] = params.pop('date__gte', None)
+		self.used_parameters['date__lte'] = params.pop('date__lte', None)
 
 	def expected_parameters(self):
 		return ["date__gte", "date__lte"]
@@ -32,9 +40,26 @@ class DateRangeFilter(admin.SimpleListFilter):
 		return True
 
 	def queryset(self, request, queryset):
-		# Remove empty parameters to avoid interfering with other filters/search
-		date_from = self.used_parameters.get("date__gte") or None
-		date_to = self.used_parameters.get("date__lte") or None
+		# Normalize values coming from GET (can be list/tuple/empty string).
+		date_from = self.used_parameters.get("date__gte")
+		date_to = self.used_parameters.get("date__lte")
+
+		if isinstance(date_from, (list, tuple)):
+			date_from = date_from[0] if date_from else None
+		if isinstance(date_to, (list, tuple)):
+			date_to = date_to[0] if date_to else None
+
+		if date_from == "":
+			date_from = None
+		if date_to == "":
+			date_to = None
+
+		# Guard against malformed values (prevents admin from redirecting to ?e=1).
+		if date_from and (not isinstance(date_from, str) or parse_date(date_from) is None):
+			date_from = None
+		if date_to and (not isinstance(date_to, str) or parse_date(date_to) is None):
+			date_to = None
+
 		if not date_from:
 			self.used_parameters.pop("date__gte", None)
 		if not date_to:
