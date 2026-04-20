@@ -35,7 +35,7 @@ class Stock(models.Model):
 	serial_number = models.CharField(max_length=100, blank=True, null=True)
 	quantity = models.PositiveIntegerField(default=1)
 	sale_price = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
-	cost_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+	cost_price = models.DecimalField("Purchase Price", max_digits=12, decimal_places=2, default=0)
 	
 	def __str__(self):
 		return f"Stock {self.sl_no} - {self.product}"
@@ -50,9 +50,10 @@ class Finance(models.Model):
 	]
 
 	REASON_CHOICES = [
-		("DAILY_CHARGES", "Daily Charges"),
-		("STOCK_IN_LOCAL", "Stock In Local"),
-		("SERVICE_IN_LOCAL", "Service In Local"),
+		("SHOP_MAINTENANCE", "Shop maintenance"),
+		("LOCAL_SERVICE", "Local service"),
+		("BY_ORDER_FROM_DEALER", "By order from dealer"),
+		("STOCK_FROM_LOCAL", "Stock from local"),
 		("OTHER", "Other"),
 	]
 	
@@ -68,6 +69,18 @@ class Finance(models.Model):
 	
 	class Meta:
 		verbose_name_plural = "Finance"
+
+
+class Contact(models.Model):
+	name = models.CharField(max_length=120)
+	mobile_num = models.CharField(max_length=15, unique=True)
+	address = models.TextField(blank=True, null=True)
+
+	def __str__(self):
+		return f"{self.name} - {self.mobile_num}"
+
+	class Meta:
+		verbose_name_plural = "Contacts"
 
 
 class Invoice(models.Model):
@@ -350,3 +363,46 @@ def track_old_invoice_payment_status(sender, instance, **kwargs):
 
 # Finance creation is now handled in admin.py save_related() method for proper timing
 # This ensures total_amount is calculated before Finance entry is created
+
+
+def _upsert_contact(name, mobile_num, address=None):
+	"""Create or update a contact using mobile number as the unique key."""
+	if not mobile_num:
+		return
+	Contact.objects.update_or_create(
+		mobile_num=mobile_num,
+		defaults={
+			"name": name,
+			"address": address,
+		},
+	)
+
+
+@receiver(post_save, sender=Entry)
+def create_contact_from_entry(sender, instance, created, **kwargs):
+	if created:
+		_upsert_contact(
+			name=instance.customer_name,
+			mobile_num=instance.mobile_num,
+			address=instance.address,
+		)
+
+
+@receiver(post_save, sender=Invoice)
+def create_contact_from_invoice(sender, instance, created, **kwargs):
+	if created:
+		_upsert_contact(
+			name=instance.customer_name,
+			mobile_num=instance.mobile_num,
+			address=instance.customer_address,
+		)
+
+
+@receiver(post_save, sender=Quotation)
+def create_contact_from_quotation(sender, instance, created, **kwargs):
+	if created:
+		_upsert_contact(
+			name=instance.customer_name,
+			mobile_num=instance.mobile_num,
+			address=instance.customer_address,
+		)

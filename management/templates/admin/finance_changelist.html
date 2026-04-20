@@ -41,6 +41,21 @@
         border-color: #dc3545;
         color: #dc3545;
     }
+
+    .summary-button.reason {
+        background-color: #f3f4f6;
+        border-color: #6c757d;
+        color: #343a40;
+        cursor: default;
+        opacity: 1;
+    }
+
+    .debit-reason-summary-title {
+        margin: 10px 0 8px 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #495057;
+    }
 </style>
 
 <div class="finance-summary">
@@ -57,6 +72,17 @@
         {{ total_debits }}
     </button>
 </div>
+
+<div class="debit-reason-summary-title">Debit Breakdown (Selected Date Range)</div>
+<div class="finance-summary">
+    {% for item in debit_reason_totals %}
+    <button class="summary-button reason" disabled>
+        <strong>{{ item.label }}</strong><br>
+        {{ item.amount }}
+    </button>
+    {% endfor %}
+</div>
+
 <div style="display: flex; justify-content: flex-end; align-items: center; margin-top: 48px; margin-right: 48px; margin-bottom: 32px;">
     <button onclick="printFinanceTable()" style="padding: 6px 18px; font-size: 15px;" class="btn btn-secondary">Print</button>
 </div>

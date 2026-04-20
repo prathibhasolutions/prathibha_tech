@@ -5,7 +5,7 @@ from django.template.response import TemplateResponse
 from django.utils.html import format_html
 from django.db import models
 from decimal import Decimal
-from .models import Entry, Stock, Finance, Invoice, Quotation, InvoiceItem, QuotationItem, AuditEvent
+from .models import Entry, Stock, Finance, Contact, Invoice, Quotation, InvoiceItem, QuotationItem, AuditEvent
 from django.contrib import admin as django_admin
 from django import forms
 from .utils import amount_to_words, generate_phonepe_qr
@@ -156,6 +156,31 @@ class AuditedModelAdmin(admin.ModelAdmin):
 
 class InvoiceItemForm(forms.ModelForm):
 	"""Form for InvoiceItem with stock selection and available qty display"""
+
+	class StockSelect(forms.Select):
+		"""Select widget with stock metadata for client-side autofill."""
+
+		def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+			option = super().create_option(name, value, label, selected, index, subindex=subindex, attrs=attrs)
+			stock = getattr(value, "instance", None)
+			if stock is not None:
+				option["attrs"].update(
+					{
+						"data-stock-product": stock.product or "",
+						"data-sale-price": str(stock.sale_price or Decimal("0.00")),
+					}
+				)
+			return option
+
+	class StockChoiceField(forms.ModelChoiceField):
+		def label_from_instance(self, obj):
+			return f"{obj.product} (Available: {obj.quantity})"
+
+	stock = StockChoiceField(
+		queryset=Stock.objects.none(),
+		required=False,
+		widget=StockSelect,
+	)
 	
 	class Meta:
 		model = InvoiceItem
@@ -163,18 +188,15 @@ class InvoiceItemForm(forms.ModelForm):
 	
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		
-		# Build stock choices with available quantity info
-		stock_choices = [('', '-- Select Stock --')]
-		stock_items = Stock.objects.all().order_by('product')
-		
-		for stock in stock_items:
-			label = f"{stock.product} (Available: {stock.quantity})"
-			stock_choices.append((stock.sl_no, label))
-		
-		self.fields['stock'].widget = forms.Select(choices=stock_choices)
+
+		self.fields['stock'].queryset = Stock.objects.all().order_by('product')
+		self.fields['stock'].widget.attrs.update({
+			"style": "width: 100%; max-width: 280px;",
+		})
 		self.fields['stock'].required = False
 		self.fields['stock'].label = "Particulars"
+		self.fields['particulars'].required = False
+		self.fields['price'].required = False
 		
 		# Pre-fill particulars from stock if available
 		if self.instance.pk and self.instance.stock:
@@ -183,22 +205,165 @@ class InvoiceItemForm(forms.ModelForm):
 	def clean(self):
 		cleaned_data = super().clean()
 		stock = cleaned_data.get('stock')
+		entered_price = cleaned_data.get('price')
+		entered_particulars = cleaned_data.get('particulars')
 		
 		if stock:
 			# Auto-fill particulars and price from stock
 			cleaned_data['particulars'] = stock.product
 			# Only set price from stock if user did not enter one
-			entered_price = cleaned_data.get('price')
 			if entered_price in (None, ""):
 				cleaned_data['price'] = stock.sale_price or Decimal("0.00")
+		else:
+			if not entered_particulars:
+				self.add_error('particulars', 'This field is required.')
+			if entered_price in (None, ""):
+				self.add_error('price', 'This field is required.')
 		
 		return cleaned_data
 
 
+class ContactSelect(forms.Select):
+	"""Select widget that embeds contact details for client-side autofill."""
+
+	def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+		option = super().create_option(name, value, label, selected, index, subindex=subindex, attrs=attrs)
+		contact = getattr(value, "instance", None)
+		if contact is not None:
+			option["attrs"].update(
+				{
+					"data-contact-name": contact.name or "",
+					"data-contact-mobile": contact.mobile_num or "",
+					"data-contact-address": contact.address or "",
+				}
+			)
+		return option
+
+
+def _apply_bound_contact_data(form, address_field_name):
+	"""Populate bound form data from selected contact before validation runs."""
+	if not form.is_bound:
+		return
+
+	contact_id = form.data.get("contact")
+	if not contact_id:
+		return
+
+	try:
+		contact = Contact.objects.get(pk=contact_id)
+	except (Contact.DoesNotExist, ValueError, TypeError):
+		return
+
+	bound_data = form.data.copy()
+	bound_data["customer_name"] = contact.name or ""
+	bound_data["mobile_num"] = contact.mobile_num or ""
+	bound_data[address_field_name] = contact.address or ""
+	form.data = bound_data
+
+
+class EntryForm(forms.ModelForm):
+	contact = forms.ModelChoiceField(
+		queryset=Contact.objects.none(),
+		required=False,
+		widget=ContactSelect,
+		help_text="Select an existing contact to auto-fill customer details.",
+	)
+
+	class Meta:
+		model = Entry
+		fields = "__all__"
+
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		_apply_bound_contact_data(self, "address")
+		self.fields["contact"].queryset = Contact.objects.all().order_by("name", "mobile_num")
+		if self.instance.pk and self.instance.mobile_num:
+			self.fields["contact"].initial = Contact.objects.filter(mobile_num=self.instance.mobile_num).first()
+
+	def clean(self):
+		cleaned_data = super().clean()
+		contact = cleaned_data.get("contact")
+		if contact:
+			cleaned_data["customer_name"] = contact.name
+			cleaned_data["mobile_num"] = contact.mobile_num
+			cleaned_data["address"] = contact.address
+		return cleaned_data
+
+
+class InvoiceForm(forms.ModelForm):
+	contact = forms.ModelChoiceField(
+		queryset=Contact.objects.none(),
+		required=False,
+		widget=ContactSelect,
+		help_text="Select an existing contact to auto-fill customer details.",
+	)
+
+	class Meta:
+		model = Invoice
+		fields = "__all__"
+
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		_apply_bound_contact_data(self, "customer_address")
+		self.fields["contact"].queryset = Contact.objects.all().order_by("name", "mobile_num")
+		if self.instance.pk and self.instance.mobile_num:
+			self.fields["contact"].initial = Contact.objects.filter(mobile_num=self.instance.mobile_num).first()
+
+	def clean(self):
+		cleaned_data = super().clean()
+		contact = cleaned_data.get("contact")
+		if contact:
+			cleaned_data["customer_name"] = contact.name
+			cleaned_data["mobile_num"] = contact.mobile_num
+			cleaned_data["customer_address"] = contact.address
+		return cleaned_data
+
+
+class QuotationForm(forms.ModelForm):
+	contact = forms.ModelChoiceField(
+		queryset=Contact.objects.none(),
+		required=False,
+		widget=ContactSelect,
+		help_text="Select an existing contact to auto-fill customer details.",
+	)
+
+	class Meta:
+		model = Quotation
+		fields = "__all__"
+
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		_apply_bound_contact_data(self, "customer_address")
+		self.fields["contact"].queryset = Contact.objects.all().order_by("name", "mobile_num")
+		if self.instance.pk and self.instance.mobile_num:
+			self.fields["contact"].initial = Contact.objects.filter(mobile_num=self.instance.mobile_num).first()
+
+	def clean(self):
+		cleaned_data = super().clean()
+		contact = cleaned_data.get("contact")
+		if contact:
+			cleaned_data["customer_name"] = contact.name
+			cleaned_data["mobile_num"] = contact.mobile_num
+			cleaned_data["customer_address"] = contact.address
+		return cleaned_data
+
+
 class EntryAdmin(AuditedModelAdmin):
+	form = EntryForm
 	list_display = ("sl_no", "date", "customer_name", "mobile_num", "product_status")
 	list_filter = ("product_status", DateRangeFilter)
 	search_fields = ("customer_name", "mobile_num", "product_issue")
+	fieldsets = (
+		("Customer", {
+			"fields": ("contact", "customer_name", "mobile_num", "address")
+		}),
+		("Entry Details", {
+			"fields": ("date", "product", "product_issue", "product_with", "product_status")
+		}),
+	)
+
+	class Media:
+		js = ("management/js/contact_autofill.js", "management/js/invoice_items.js")
 
 
 
@@ -243,12 +408,35 @@ class FinanceAdmin(AuditedModelAdmin):
 		credits = base_qs.filter(transaction_type="CREDIT").aggregate(total=models.Sum("amount"))["total"] or 0
 		debits = base_qs.filter(transaction_type="DEBIT").aggregate(total=models.Sum("amount"))["total"] or 0
 		balance = credits - debits
+
+		debit_reason_map = [
+			("SHOP_MAINTENANCE", "Shop maintenance"),
+			("LOCAL_SERVICE", "Local service"),
+			("BY_ORDER_FROM_DEALER", "By order from dealer"),
+			("STOCK_FROM_LOCAL", "Stock from local"),
+		]
+		debit_reason_totals = []
+		for reason_key, reason_label in debit_reason_map:
+			reason_total = base_qs.filter(transaction_type="DEBIT", reason=reason_key).aggregate(total=models.Sum("amount"))["total"] or 0
+			debit_reason_totals.append(
+				{
+					"key": reason_key,
+					"label": reason_label,
+					"amount": f"₹{reason_total:,.2f}",
+				}
+			)
 		
 		extra_context["total_credits"] = f"₹{credits:,.2f}"
 		extra_context["total_debits"] = f"₹{debits:,.2f}"
 		extra_context["current_balance"] = f"₹{balance:,.2f}"
+		extra_context["debit_reason_totals"] = debit_reason_totals
 		
 		return super().changelist_view(request, extra_context)
+
+
+class ContactAdmin(AuditedModelAdmin):
+	list_display = ("name", "mobile_num", "address")
+	search_fields = ("name", "mobile_num", "address")
 
 
 class InvoiceItemInline(admin.TabularInline):
@@ -261,6 +449,7 @@ class InvoiceItemInline(admin.TabularInline):
 
 
 class InvoiceAdmin(AuditedModelAdmin):
+	form = InvoiceForm
 	list_display = ("invoice_no", "date", "customer_name", "mobile_num", "total_amount", "balance", "payment_status", "print_link")
 	list_filter = (DateRangeFilter, "payment_status")
 	search_fields = ("invoice_no", "customer_name", "mobile_num")
@@ -268,12 +457,15 @@ class InvoiceAdmin(AuditedModelAdmin):
 	inlines = [InvoiceItemInline]
 	fieldsets = (
 		("Invoice Details", {
-			"fields": ("invoice_no", "date", "customer_name", "mobile_num", "customer_address")
+			"fields": ("contact", "invoice_no", "date", "customer_name", "mobile_num", "customer_address")
 		}),
 		("Amounts", {
 			"fields": ("discount", "gst", "advance_amount", "total_amount", "balance", "payment_status", "notes")
 		}),
 	)
+
+	class Media:
+		js = ("management/js/contact_autofill.js",)
 
 
 
@@ -282,29 +474,41 @@ class InvoiceAdmin(AuditedModelAdmin):
 		# Recalculate totals after saving
 		obj.save()
 
+	def _sync_invoice_finance_entry(self, invoice):
+		"""Keep exactly one finance credit entry per invoice when it is payable."""
+		invoice_prefix = f"Invoice {invoice.invoice_no}"
+		existing_qs = Finance.objects.filter(
+			transaction_type="CREDIT",
+			description__startswith=invoice_prefix,
+		).order_by("sl_no")
+
+		if invoice.payment_status == "PAID" and invoice.total_amount > 0:
+			primary_entry = existing_qs.first()
+			if primary_entry:
+				primary_entry.date = invoice.date
+				primary_entry.amount = invoice.total_amount
+				primary_entry.reason = "OTHER"
+				primary_entry.description = f"Invoice {invoice.invoice_no} - {invoice.customer_name}"
+				primary_entry.save(update_fields=["date", "amount", "reason", "description"])
+				# Remove any previously duplicated rows for the same invoice.
+				existing_qs.exclude(pk=primary_entry.pk).delete()
+			else:
+				Finance.objects.create(
+					date=invoice.date,
+					transaction_type="CREDIT",
+					amount=invoice.total_amount,
+					reason="OTHER",
+					description=f"Invoice {invoice.invoice_no} - {invoice.customer_name}",
+				)
+		else:
+			existing_qs.delete()
+
 	def save_related(self, request, form, formsets, change):
 		super().save_related(request, form, formsets, change)
 		# Recalculate totals after saving related items
 		form.instance.save()
-		
-		# Create Finance entry if invoice is PAID (on creation or status change)
-		invoice = form.instance
-		if invoice.payment_status == "PAID" and invoice.total_amount > 0:
-			# Check if Finance entry already exists for this invoice
-			from datetime import datetime
-			
-			if not Finance.objects.filter(
-				transaction_type="CREDIT",
-				amount=invoice.total_amount,
-				description__contains=f"Invoice {invoice.invoice_no}"
-			).exists():
-				Finance.objects.create(
-					date=datetime.now().date(),
-					transaction_type="CREDIT",
-					amount=invoice.total_amount,
-					reason="OTHER",
-					description=f"Invoice {invoice.invoice_no} - {invoice.customer_name}"
-				)
+
+		self._sync_invoice_finance_entry(form.instance)
 
 	def print_link(self, obj):
 		url = reverse("admin:management_invoice_print", args=[obj.pk])
@@ -348,6 +552,7 @@ class QuotationItemInline(admin.TabularInline):
 
 
 class QuotationAdmin(AuditedModelAdmin):
+	form = QuotationForm
 
 	actions = ["duplicate_quotation"]
 
@@ -386,12 +591,15 @@ class QuotationAdmin(AuditedModelAdmin):
 
 	fieldsets = (
 		("Quotation Details", {
-			"fields": ("date", "customer_name", "mobile_num", "customer_address")
+			"fields": ("contact", "date", "customer_name", "mobile_num", "customer_address")
 		}),
 		("Amounts", {
 			"fields": ("discount", "gst", "total", "notes")
 		}),
 	)
+
+	class Media:
+		js = ("management/js/contact_autofill.js",)
 
 	def save_model(self, request, obj, form, change):
 		super().save_model(request, obj, form, change)
@@ -506,6 +714,7 @@ django_admin.site = CustomAdminSite(name='admin')
 django_admin.site.register(Entry, EntryAdmin)
 django_admin.site.register(Stock, StockAdmin)
 django_admin.site.register(Finance, FinanceAdmin)
+django_admin.site.register(Contact, ContactAdmin)
 django_admin.site.register(Invoice, InvoiceAdmin)
 django_admin.site.register(Quotation, QuotationAdmin)
 

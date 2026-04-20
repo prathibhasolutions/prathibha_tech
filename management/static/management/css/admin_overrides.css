@@ -140,3 +140,23 @@
     font-size: 0.8125rem;
   }
 }
+
+/* Keep invoice inline stock select from stretching the particulars grid */
+#items-group .tabular.inline-related,
+#invoiceitem_set-group .tabular.inline-related {
+  table-layout: fixed;
+}
+
+#items-group .tabular.inline-related th.column-stock,
+#items-group .tabular.inline-related td.field-stock,
+#invoiceitem_set-group .tabular.inline-related th.column-stock,
+#invoiceitem_set-group .tabular.inline-related td.field-stock {
+  width: 280px;
+  max-width: 280px;
+}
+
+#items-group .tabular.inline-related td.field-stock select,
+#invoiceitem_set-group .tabular.inline-related td.field-stock select {
+  width: 100%;
+  max-width: 280px;
+}
