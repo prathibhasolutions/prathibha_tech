@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-labelledby="title desc">
+  <title id="title">Data Recovery</title>
+  <desc id="desc">Hard drive recovery and secure data illustration</desc>
+  <defs>
+    <linearGradient id="g8" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#eef7ff"/>
+      <stop offset="100%" stop-color="#cfe6ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="400" rx="24" fill="url(#g8)"/>
+  <rect x="150" y="80" width="340" height="240" rx="20" fill="#1f3f59"/>
+  <rect x="190" y="120" width="260" height="160" rx="14" fill="#8cb5d9"/>
+  <circle cx="320" cy="200" r="50" fill="#1f3f59"/>
+  <circle cx="320" cy="200" r="22" fill="#f26522"/>
+  <path d="M500 170 C548 188 552 236 515 260" stroke="#1f3f59" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <polygon points="512,255 548,262 523,289" fill="#1f3f59"/>
+</svg>

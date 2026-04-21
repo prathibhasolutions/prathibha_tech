@@ -1,0 +1,177 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prathibha Technologies | Sales and Services</title>
+    <meta name="description" content="Prathibha Technologies provides reliable sales and service solutions including hardware, printer support, networking, AMC, CCTV, and data recovery.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'management/css/home.css' %}">
+    <script src="{% static 'management/js/home.js' %}" defer></script>
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav-wrap container" aria-label="Main navigation">
+            <a href="{% url 'home' %}" class="brand">
+                <img class="brand-logo" src="{% static 'management/img/logo.png' %}" alt="Prathibha Technologies logo">
+                <span class="brand-text">Prathibha Technologies</span>
+            </a>
+            <div class="nav-actions">
+                <a class="btn btn-outline" href="#services">Our Services</a>
+                <a class="btn btn-outline" href="{% url 'admin:login' %}">Admin Login</a>
+                <button type="button" class="btn btn-solid js-book-service">Book a Service</button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        {% if messages %}
+            <section class="container alerts" aria-live="polite">
+                {% for message in messages %}
+                    {% if "success" not in message.tags %}
+                        <p class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</p>
+                    {% endif %}
+                {% endfor %}
+            </section>
+        {% endif %}
+
+        <section class="hero container">
+            <div class="hero-content">
+                <p class="eyebrow">Sales and Services</p>
+                <h1>Technology Support That Keeps Your Business Running</h1>
+                <p class="hero-copy">
+                    Prathibha Technologies delivers trusted sales and service support for offices,
+                    homes, and institutions with fast response and expert technicians.
+                </p>
+                <div class="hero-buttons">
+                    <a class="btn btn-solid" href="#services">Explore Services</a>
+                    <button type="button" class="btn btn-ghost js-book-service">Book a Service</button>
+                </div>
+            </div>
+            <div class="hero-art" aria-hidden="true">
+                <div class="hero-glow"></div>
+                <img src="{% static 'management/img/services/networking.svg' %}" alt="Technician network setup illustration">
+            </div>
+        </section>
+
+        <section class="services" id="services">
+            <div class="container">
+                <h2>What We Provide</h2>
+                <p class="section-copy">Complete IT and device care services under one roof.</p>
+                <div class="service-grid">
+                    <article class="service-card">
+                        <img src="{% static 'management/img/services/hardware.svg' %}" alt="Hardware service illustration">
+                        <h3>Hardware Services</h3>
+                    </article>
+                    <article class="service-card">
+                        <img src="{% static 'management/img/services/printer.svg' %}" alt="Printer service illustration">
+                        <h3>Printer Services</h3>
+                    </article>
+                    <article class="service-card">
+                        <img src="{% static 'management/img/services/cartridge.svg' %}" alt="Cartridge refilling illustration">
+                        <h3>Cartridge Refilling</h3>
+                    </article>
+                    <article class="service-card">
+                        <img src="{% static 'management/img/services/chip.svg' %}" alt="Chip level repair illustration">
+                        <h3>Chip Level Services</h3>
+                    </article>
+                    <article class="service-card">
+                        <img src="{% static 'management/img/services/networking.svg' %}" alt="Networking service illustration">
+                        <h3>Networking</h3>
+                    </article>
+                    <article class="service-card">
+                        <img src="{% static 'management/img/services/amc.svg' %}" alt="AMC support service illustration">
+                        <h3>AMC Services</h3>
+                    </article>
+                    <article class="service-card">
+                        <img src="{% static 'management/img/services/cctv.svg' %}" alt="CC camera service illustration">
+                        <h3>CC Camera Services</h3>
+                    </article>
+                    <article class="service-card">
+                        <img src="{% static 'management/img/services/recovery.svg' %}" alt="Data recovery illustration">
+                        <h3>Data Recovery</h3>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta container">
+            <div>
+                <h2>Need Quick Service Support?</h2>
+                <p>Tell us your requirement and our team will contact you quickly.</p>
+            </div>
+            <button type="button" class="btn btn-solid js-book-service">Book a Service</button>
+        </section>
+
+        <section class="contact container" id="contact">
+            <h2>Contact Prathibha Technologies</h2>
+            <p class="section-copy">Reach us for sales and service support.</p>
+            <div class="contact-grid">
+                <article class="contact-card">
+                    <h3>Call Us</h3>
+                    <p><a href="tel:+919032256616">+91 9032256616</a></p>
+                    <p><a href="tel:+919963173670">+91 9963173670</a></p>
+                </article>
+                <article class="contact-card">
+                    <h3>Email</h3>
+                    <p><a href="mailto:prathibhatechnologies3@gmail.com">prathibhatechnologies3@gmail.com</a></p>
+                </article>
+                <article class="contact-card">
+                    <h3>Address</h3>
+                    <p>Beside Bank of Maharashtra, Namdevwada, Nizamabad - 503001</p>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>&copy; {% now "Y" %} Prathibha Technologies. All rights reserved.</p>
+            <p>Designed by <a href="https://www.prathibhasolutions.com" target="_blank" rel="noopener noreferrer">Prathibha Solutions</a>.</p>
+        </div>
+    </footer>
+
+    <div class="modal-backdrop" id="booking-modal" hidden>
+        <div class="booking-modal" role="dialog" aria-modal="true" aria-labelledby="booking-title">
+            <button type="button" class="modal-close" id="close-booking-modal" aria-label="Close">&times;</button>
+            <h2 id="booking-title">Book a Service</h2>
+            <p class="modal-copy">Submit your request and we will get back to you soon.</p>
+            <form method="post" class="booking-form">
+                {% csrf_token %}
+                <label for="service_needed">Service Needed</label>
+                <select id="service_needed" name="service_needed" required>
+                    <option value="" selected disabled>Select a service</option>
+                    {% for value, label in service_choices %}
+                        <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="mobile_num">Mobile Number</label>
+                <input type="tel" id="mobile_num" name="mobile_num" maxlength="15" required>
+
+                <label for="address">Address</label>
+                <textarea id="address" name="address" rows="3" required></textarea>
+
+                <button class="btn btn-solid" type="submit">Submit Request</button>
+            </form>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            {% if "success" in message.tags %}
+                <div class="modal-backdrop attention-backdrop" id="success-popup">
+                    <div class="attention-modal" role="alertdialog" aria-modal="true" aria-labelledby="success-title" aria-describedby="success-message">
+                        <h2 id="success-title">Service Request Submitted</h2>
+                        <p id="success-message">{{ message }}</p>
+                        <button type="button" class="btn btn-solid" id="close-success-popup">OK</button>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+</body>
+</html>

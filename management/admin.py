@@ -5,7 +5,7 @@ from django.template.response import TemplateResponse
 from django.utils.html import format_html
 from django.db import models
 from decimal import Decimal
-from .models import Entry, Stock, Finance, Contact, Invoice, Quotation, InvoiceItem, QuotationItem, AuditEvent
+from .models import Entry, Stock, Finance, Contact, ServiceBooking, Invoice, Quotation, InvoiceItem, QuotationItem, AuditEvent
 from django.contrib import admin as django_admin
 from django import forms
 from .utils import amount_to_words, generate_phonepe_qr
@@ -439,6 +439,13 @@ class ContactAdmin(AuditedModelAdmin):
 	search_fields = ("name", "mobile_num", "address")
 
 
+class ServiceBookingAdmin(AuditedModelAdmin):
+	list_display = ("service_needed", "mobile_num", "created_at")
+	list_filter = ("service_needed", "created_at")
+	search_fields = ("mobile_num", "address")
+	readonly_fields = ("created_at",)
+
+
 class InvoiceItemInline(admin.TabularInline):
 	model = InvoiceItem
 	form = InvoiceItemForm
@@ -715,6 +722,7 @@ django_admin.site.register(Entry, EntryAdmin)
 django_admin.site.register(Stock, StockAdmin)
 django_admin.site.register(Finance, FinanceAdmin)
 django_admin.site.register(Contact, ContactAdmin)
+django_admin.site.register(ServiceBooking, ServiceBookingAdmin)
 django_admin.site.register(Invoice, InvoiceAdmin)
 django_admin.site.register(Quotation, QuotationAdmin)
 

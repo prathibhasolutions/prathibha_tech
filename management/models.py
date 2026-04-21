@@ -83,6 +83,32 @@ class Contact(models.Model):
 		verbose_name_plural = "Contacts"
 
 
+class ServiceBooking(models.Model):
+	SERVICE_CHOICES = [
+		("HARDWARE_SERVICES", "Hardware Services"),
+		("PRINTER_SERVICES", "Printer Services"),
+		("CARTRIDGE_REFILLING", "Cartridge Refilling"),
+		("CHIP_LEVEL_SERVICES", "Chip Level Services"),
+		("NETWORKING", "Networking"),
+		("AMC_SERVICES", "AMC Services"),
+		("CC_CAMERA_SERVICES", "CC Camera Services"),
+		("DATA_RECOVERY", "Data Recovery"),
+	]
+
+	service_needed = models.CharField(max_length=40, choices=SERVICE_CHOICES)
+	mobile_num = models.CharField(max_length=15)
+	address = models.TextField()
+	created_at = models.DateTimeField(auto_now_add=True)
+
+	def __str__(self):
+		return f"{self.get_service_needed_display()} - {self.mobile_num}"
+
+	class Meta:
+		ordering = ["-created_at"]
+		verbose_name = "Service Booking"
+		verbose_name_plural = "Service Bookings"
+
+
 class Invoice(models.Model):
 	PAYMENT_STATUS = [
 		("UNPAID", "Unpaid"),

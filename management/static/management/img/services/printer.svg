@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-labelledby="title desc">
+  <title id="title">Printer Services</title>
+  <desc id="desc">Printer with active print job illustration</desc>
+  <defs>
+    <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff1df"/>
+      <stop offset="100%" stop-color="#ffe0b7"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="400" rx="24" fill="url(#g2)"/>
+  <rect x="150" y="110" width="340" height="190" rx="18" fill="#2b3d56"/>
+  <rect x="210" y="70" width="220" height="70" rx="10" fill="#ffffff"/>
+  <rect x="225" y="88" width="190" height="12" rx="6" fill="#c9d9ea"/>
+  <rect x="240" y="145" width="160" height="110" rx="10" fill="#ffffff"/>
+  <rect x="258" y="165" width="124" height="8" rx="4" fill="#aac3df"/>
+  <rect x="258" y="186" width="102" height="8" rx="4" fill="#aac3df"/>
+  <rect x="258" y="207" width="118" height="8" rx="4" fill="#aac3df"/>
+  <circle cx="440" cy="168" r="10" fill="#f26522"/>
+</svg>
